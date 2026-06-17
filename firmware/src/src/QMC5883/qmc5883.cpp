@@ -34,7 +34,7 @@
 
 LOG_MODULE_REGISTER(qmc5883);
 
-#define QMC5883L_MAG_I2C_ADDRESS     0x0D
+#define QMC5883L_MAG_I2C_ADDRESS     0x10
 
 // Registers
 #define QMC5883L_REG_CONF1 0x09
@@ -130,9 +130,9 @@ bool qmc5883Read(float mag[3])
         return false;
     }
 
-    mag[0] = (int16_t)(buf[1] << 8 | buf[0]);
-    mag[1] = (int16_t)(buf[3] << 8 | buf[2]);
-    mag[2] = (int16_t)(buf[5] << 8 | buf[4]);
+    mag[0] = (int16_t)(buf[3] << 8 | buf[2]);   // +fy (raw_y) -> Pan axis
+    mag[1] = (int16_t)(buf[1] << 8 | buf[0]);   // +fx (raw_x) -> Roll axis
+    mag[2] = -(int16_t)(buf[5] << 8 | buf[4]);  // -fz (raw_z inverted) -> Tilt axis
 
     mag[0] /= 163.84f; // 16Bit +/-2 Gauss to uT
     mag[1] /= 163.84f;

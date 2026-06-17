@@ -10,7 +10,8 @@
 // Board Features
 #if defined(BOARD_REV2)
   #define HAS_BMI270
-  #define HAS_BMM150
+  #define HAS_QMC5883    // 外接QMC5883P替代损坏的BMM150
+  // #define HAS_BMM150  // BMM150已损坏，禁用
 #else
   #define HAS_LSM9DS1
 #endif

@@ -132,6 +132,8 @@ MPU6886 mpu6886;
 
 #define SENSOR_VALUE_TO_FLOAT(x) ((float)x.val1 + (float)x.val2 / 1000000.0f)
 
+#define OUTFILT_ALPHA 0.3f
+
 // Initial Orientation Data+Vars
 #define MADGINIT_ACCEL 0x01
 #define MADGINIT_MAG 0x02
@@ -427,6 +429,18 @@ void calculate_Thread()
       // Pan output, Normalize to +/- 180 Degrees
       panout = normalize((pan - panoffset), -180, 180) * trkset.getPan_Gain() *
                     (trkset.isPanReversed() ? -1.0f : 1.0f);
+
+      // Output channel first-order low-pass filter
+      static float tiltout_prev = 0.0f;
+      static float rollout_prev = 0.0f;
+      static float panout_prev = 0.0f;
+      tiltout = OUTFILT_ALPHA * tiltout + (1.0f - OUTFILT_ALPHA) * tiltout_prev;
+      rollout = OUTFILT_ALPHA * rollout + (1.0f - OUTFILT_ALPHA) * rollout_prev;
+      panout = OUTFILT_ALPHA * panout + (1.0f - OUTFILT_ALPHA) * panout_prev;
+      tiltout_prev = tiltout;
+      rollout_prev = rollout;
+      panout_prev = panout;
+
       k_mutex_unlock(&sensor_mutex);
     } else {
       LOG_ERR("Sensor Mutex Lock Failed");
