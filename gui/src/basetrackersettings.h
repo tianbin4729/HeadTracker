@@ -157,6 +157,15 @@ public:
     _setting["ppmframe"] = 22500;
     _setting["ppmsync"] = 350;
     _setting["ppmchcnt"] = 8;
+    _setting["madbeta"] = 0.04;
+    _setting["lppan"] = 0.3;
+    _setting["lptilt"] = 0.3;
+    _setting["lproll"] = 0.3;
+    _setting["adpbetamin"] = 0.02;
+    _setting["adpbetamax"] = 0.12;
+    _setting["stillthresh"] = 0.08;
+    _setting["yawlocktime"] = 50;
+    _setting["maganomratio"] = 0.35;
     _setting["btpairedaddress"] = QString("");
     _dataItems["magx"] = false;
     _dataItems["magy"] = false;
@@ -271,6 +280,15 @@ public:
     descriptions["ppmframe"] = tr("PPM Frame Length (us)");
     descriptions["ppmsync"] = tr("PPM Sync Pulse Length (us)");
     descriptions["ppmchcnt"] = tr("PPM channels to output");
+    descriptions["madbeta"] = tr("Madgwick Beta Gain");
+    descriptions["lppan"] = tr("Pan Output Low Pass Alpha");
+    descriptions["lptilt"] = tr("Tilt Output Low Pass Alpha");
+    descriptions["lproll"] = tr("Roll Output Low Pass Alpha");
+    descriptions["adpbetamin"] = tr("Adaptive Beta Minimum");
+    descriptions["adpbetamax"] = tr("Adaptive Beta Maximum");
+    descriptions["stillthresh"] = tr("Stillness Gyro Threshold");
+    descriptions["yawlocktime"] = tr("Yaw Lock Sample Count");
+    descriptions["maganomratio"] = tr("Mag Anomaly Detection Ratio");
     descriptions["magx"] = tr("Raw Sensor Mag X(uT)");
     descriptions["magy"] = tr("Raw Sensor Mag Y(uT)");
     descriptions["magz"] = tr("Raw Sensor Mag Z(uT)");
@@ -1246,6 +1264,118 @@ public:
   bool setPpmChCnt(uint8_t val=8) {
     if(val >= 1 && val <= 16) {
       _setting["ppmchcnt"] = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Madgwick Beta Gain
+  float getMadBeta() {
+    return _setting["madbeta"].toFloat();
+  }
+  bool setMadBeta(float val=0.04) {
+    if(val >= 0.001 && val <= 1.0) {
+      _setting["madbeta"] = QString::number(val,'g',4);
+      return true;
+    }
+    return false;
+  }
+
+
+  // Pan Output Low Pass Alpha
+  float getLpPan() {
+    return _setting["lppan"].toFloat();
+  }
+  bool setLpPan(float val=0.3) {
+    if(val >= 0.01 && val <= 1.0) {
+      _setting["lppan"] = QString::number(val,'g',3);
+      return true;
+    }
+    return false;
+  }
+
+
+  // Tilt Output Low Pass Alpha
+  float getLpTilt() {
+    return _setting["lptilt"].toFloat();
+  }
+  bool setLpTilt(float val=0.3) {
+    if(val >= 0.01 && val <= 1.0) {
+      _setting["lptilt"] = QString::number(val,'g',3);
+      return true;
+    }
+    return false;
+  }
+
+
+  // Roll Output Low Pass Alpha
+  float getLpRoll() {
+    return _setting["lproll"].toFloat();
+  }
+  bool setLpRoll(float val=0.3) {
+    if(val >= 0.01 && val <= 1.0) {
+      _setting["lproll"] = QString::number(val,'g',3);
+      return true;
+    }
+    return false;
+  }
+
+
+  // Yaw Drift Suppression — Adaptive Beta Min
+  float getAdpBetaMin() {
+    return _setting["adpbetamin"].toFloat();
+  }
+  bool setAdpBetaMin(float val=0.02) {
+    if(val >= 0.001 && val <= 0.5) {
+      _setting["adpbetamin"] = QString::number(val,'g',3);
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Adaptive Beta Max
+  float getAdpBetaMax() {
+    return _setting["adpbetamax"].toFloat();
+  }
+  bool setAdpBetaMax(float val=0.12) {
+    if(val >= 0.001 && val <= 0.5) {
+      _setting["adpbetamax"] = QString::number(val,'g',3);
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Stillness Threshold
+  float getStillThresh() {
+    return _setting["stillthresh"].toFloat();
+  }
+  bool setStillThresh(float val=0.08) {
+    if(val >= 0.01 && val <= 1.0) {
+      _setting["stillthresh"] = QString::number(val,'g',3);
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Yaw Lock Time
+  uint16_t getYawLockTime() {
+    return _setting["yawlocktime"].toUInt();
+  }
+  bool setYawLockTime(uint16_t val=50) {
+    if(val >= 10 && val <= 500) {
+      _setting["yawlocktime"] = QString::number(val);
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Mag Anomaly Ratio
+  float getMagAnomRatio() {
+    return _setting["maganomratio"].toFloat();
+  }
+  bool setMagAnomRatio(float val=0.35) {
+    if(val >= 0.05 && val <= 1.0) {
+      _setting["maganomratio"] = QString::number(val,'g',3);
       return true;
     }
     return false;

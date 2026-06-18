@@ -3006,6 +3006,401 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="tabFilter">
+             <attribute name="title">
+              <string>Filters</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_tabFilter">
+              <item>
+               <widget class="QGroupBox" name="grpMadgwick">
+                <property name="title">
+                 <string>Madgwick Algorithm</string>
+                </property>
+                <layout class="QFormLayout" name="formLayout_madgwick">
+                 <item row="0" column="0" colspan="2">
+                  <widget class="QLabel" name="lblMadBeta">
+                   <property name="text">
+                    <string>Beta (magnetometer correction strength)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0" colspan="2">
+                  <widget class="QDoubleSpinBox" name="spnMadBeta">
+                   <property name="decimals">
+                    <number>4</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.001000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.005000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.040000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <widget class="QLabel" name="lblMadBetaHint">
+                   <property name="font">
+                    <font>
+                     <italic>true</italic>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Higher = stronger mag correction, faster drift fix but more noise</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="grpLowPass">
+                <property name="title">
+                 <string>Output Low Pass Filter</string>
+                </property>
+                <layout class="QFormLayout" name="formLayout_lowpass">
+                 <item row="0" column="0" colspan="2">
+                  <widget class="QLabel" name="lblLpAlpha">
+                   <property name="text">
+                    <string>Alpha coefficient (lower = smoother but more delay)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lblLpPan">
+                   <property name="text">
+                    <string>Pan:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QDoubleSpinBox" name="spnLpPan">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.300000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="lblLpTilt">
+                   <property name="text">
+                    <string>Tilt:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QDoubleSpinBox" name="spnLpTilt">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.300000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="lblLpRoll">
+                   <property name="text">
+                    <string>Roll:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QDoubleSpinBox" name="spnLpRoll">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.300000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_tabFilter">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="tabYaw">
+             <attribute name="title">
+              <string>Yaw 漂移抑制</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_tabYaw">
+              <item>
+               <widget class="QGroupBox" name="grpAdaptiveBeta">
+                <property name="title">
+                 <string>自适应 Beta（动态增益）</string>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_adaptiveBeta">
+                 <item row="0" column="0" colspan="2">
+                  <widget class="QLabel" name="lblAdpBetaHint">
+                   <property name="font">
+                    <font>
+                     <italic>true</italic>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>静止时低 beta = 信任磁力计纠正漂移  |  运动时高 beta = 信任陀螺仪快速响应</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lblAdpBetaMin">
+                   <property name="text">
+                    <string>静止时最小 Beta：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QDoubleSpinBox" name="spnAdpBetaMin">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.001000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>0.500000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.005000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.020000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="lblAdpBetaMax">
+                   <property name="text">
+                    <string>运动时最大 Beta：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QDoubleSpinBox" name="spnAdpBetaMax">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.001000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>0.500000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.005000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.120000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="grpStillness">
+                <property name="title">
+                 <string>静止 Yaw 锁定</string>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_stillness">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="lblStillThresh">
+                   <property name="text">
+                    <string>静止判定阈值 (rad/s)：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QDoubleSpinBox" name="spnStillThresh">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.080000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="lblStillThreshHint">
+                   <property name="font">
+                    <font>
+                     <italic>true</italic>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>越低越容易触发静止锁定</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lblYawLockTime">
+                   <property name="text">
+                    <string>锁定延迟 (采样数)：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="spnYawLockTime">
+                   <property name="minimum">
+                    <number>10</number>
+                   </property>
+                   <property name="maximum">
+                    <number>500</number>
+                   </property>
+                   <property name="singleStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>50</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="lblYawLockTimeHint">
+                   <property name="font">
+                    <font>
+                     <italic>true</italic>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>约 0.33 秒（150Hz 采样率），越高越稳定但响应越慢</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="grpMagAnomaly">
+                <property name="title">
+                 <string>磁异常检测</string>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_magAnomaly">
+                 <item row="0" column="0" colspan="2">
+                  <widget class="QLabel" name="lblMagAnomHint">
+                   <property name="font">
+                    <font>
+                     <italic>true</italic>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>检测磁场突变（靠近金属/电机），临时信任陀螺仪忽略磁力计</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lblMagAnomRatio">
+                   <property name="text">
+                    <string>异常判定比例：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QDoubleSpinBox" name="spnMagAnomRatio">
+                   <property name="decimals">
+                    <number>3</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.050000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>1.000000000000000</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.050000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.350000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="lblMagAnomRatioHint">
+                   <property name="font">
+                    <font>
+                     <italic>true</italic>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>越低越敏感，越容易检测到磁干扰</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_tabYaw">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>

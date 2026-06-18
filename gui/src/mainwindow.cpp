@@ -138,6 +138,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->spnRstDblTapMin, &QSpinBox::valueChanged, this, &MainWindow::updateFromUI);
     connect(ui->spnRstDblTapThres, &QSpinBox::valueChanged, this, &MainWindow::updateFromUI);
 
+    // Yaw Drift Suppression
+    connect(ui->spnAdpBetaMin, &QDoubleSpinBox::valueChanged, this, &MainWindow::updateFromUI);
+    connect(ui->spnAdpBetaMax, &QDoubleSpinBox::valueChanged, this, &MainWindow::updateFromUI);
+    connect(ui->spnStillThresh, &QDoubleSpinBox::valueChanged, this, &MainWindow::updateFromUI);
+    connect(ui->spnYawLockTime, &QSpinBox::valueChanged, this, &MainWindow::updateFromUI);
+    connect(ui->spnMagAnomRatio, &QDoubleSpinBox::valueChanged, this, &MainWindow::updateFromUI);
+
     // Gain Sliders
     connect(ui->til_gain, &GainSlider::valueChanged, this, &MainWindow::updateFromUI);
     connect(ui->rll_gain, &GainSlider::valueChanged, this, &MainWindow::updateFromUI);
@@ -837,6 +844,13 @@ void MainWindow::updateFromUI()
     trkset.setPpmInInvert(ui->chkInvertedPPMIn->isChecked());
     trkset.setRstOnWave(ui->chkResetCenterWave->isChecked());
 
+    // Yaw Drift Suppression
+    trkset.setAdpBetaMin(static_cast<float>(ui->spnAdpBetaMin->value()));
+    trkset.setAdpBetaMax(static_cast<float>(ui->spnAdpBetaMax->value()));
+    trkset.setStillThresh(static_cast<float>(ui->spnStillThresh->value()));
+    trkset.setYawLockTime(static_cast<uint16_t>(ui->spnYawLockTime->value()));
+    trkset.setMagAnomRatio(static_cast<float>(ui->spnMagAnomRatio->value()));
+
     ui->cmdSaveNVM->setEnabled(true);
 
     // Use timer to prevent too many writes while drags, etc.. happen
@@ -1411,12 +1425,22 @@ void MainWindow::boardDiscovered()
 
     // GUI Version
     QString lfver = version;
-    lfver.remove(0,1);
-    lfver.remove(1,1);
-    int lmajver = lfver.left(2).toInt();   // Major Version 1.1x == 11
+    if (lfver.startsWith('v') || lfver.startsWith('V'))
+        lfver.remove(0,1);                    // strip leading 'v'
+    int dotpos = lfver.indexOf('.');
+    if (dotpos >= 0) lfver.remove(dotpos, 1); // strip first '.'
+    int lmajver = lfver.left(2).toInt();       // Major Version 1.1x == 11
 
     // Remote Version
-    int rmajver = trkset.fwVersion().remove(1,1).left(2).toInt();    // Major Version 1.1x == 11
+    QString rfver = trkset.fwVersion();
+    if (rfver.startsWith('v') || rfver.startsWith('V'))
+        rfver.remove(0,1);                    // strip leading 'v'
+    dotpos = rfver.indexOf('.');
+    if (dotpos >= 0) rfver.remove(dotpos, 1); // strip first '.'
+    int rmajver = rfver.left(2).toInt();       // Major Version 1.1x == 11
+
+    qDebug() << "GUI version:" << version << "-> major:" << lmajver;
+    qDebug() << "FW version:" << trkset.fwVersion() << "-> major:" << rmajver;
 
     // Firmware is too old
     if(lmajver > rmajver) {
@@ -1425,12 +1449,13 @@ void MainWindow::boardDiscovered()
         msgbox->show();
         serialDisconnect();
 
-    // Firmware is too new
+    // Firmware is too new — show warning but still connect
     } else if (lmajver < rmajver) {
-        msgbox->setText(tr("Firmware is newer than supported by this application\nDownload the GUI v") + QString::number((float)rmajver/10,'f',1) +" from www.github.com/dlktdr/headtracker");
+        msgbox->setText(tr("Firmware (v%1) is newer than this GUI (v%2).\nSome settings may not be available.\nConsider updating the GUI from www.github.com/dlktdr/headtracker")
+            .arg(trkset.fwVersion(), version));
         msgbox->setWindowTitle(tr("Firmware Version Mismatch"));
         msgbox->show();
-        serialDisconnect();
+        // Don't disconnect — allow connection with newer firmware
     }
     if(channelViewerOpen) {
         channelviewer->show();
