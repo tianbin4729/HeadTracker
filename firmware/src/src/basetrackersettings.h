@@ -845,6 +845,94 @@ public:
     return false;
   }
 
+  // Madgwick Beta Gain
+  inline const float& getMadBeta() {return madbeta;}
+  bool setMadBeta(float val=0.04) {
+    if(val >= 0.001 && val <= 1.0) {
+      madbeta = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Adaptive Beta
+  inline const float& getAdpBetaMin() {return adpbetamin;}
+  bool setAdpBetaMin(float val=0.02) {
+    if(val >= 0.001 && val <= 0.5) {
+      adpbetamin = val;
+      return true;
+    }
+    return false;
+  }
+  inline const float& getAdpBetaMax() {return adpbetamax;}
+  bool setAdpBetaMax(float val=0.12) {
+    if(val >= 0.001 && val <= 0.5) {
+      adpbetamax = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Stillness Threshold
+  inline const float& getStillThresh() {return stillthresh;}
+  bool setStillThresh(float val=0.08) {
+    if(val >= 0.01 && val <= 1.0) {
+      stillthresh = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Yaw Lock Time
+  inline const uint16_t& getYawLockTime() {return yawlocktime;}
+  bool setYawLockTime(uint16_t val=50) {
+    if(val >= 10 && val <= 500) {
+      yawlocktime = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Yaw Drift Suppression — Mag Anomaly Ratio
+  inline const float& getMagAnomRatio() {return maganomratio;}
+  bool setMagAnomRatio(float val=0.35) {
+    if(val >= 0.05 && val <= 1.0) {
+      maganomratio = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Pan Output Low Pass Alpha
+  inline const float& getLpPan() {return lppan;}
+  bool setLpPan(float val=0.3) {
+    if(val >= 0.01 && val <= 1.0) {
+      lppan = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Tilt Output Low Pass Alpha
+  inline const float& getLpTilt() {return lptilt;}
+  bool setLpTilt(float val=0.3) {
+    if(val >= 0.01 && val <= 1.0) {
+      lptilt = val;
+      return true;
+    }
+    return false;
+  }
+
+  // Roll Output Low Pass Alpha
+  inline const float& getLpRoll() {return lproll;}
+  bool setLpRoll(float val=0.3) {
+    if(val >= 0.01 && val <= 1.0) {
+      lproll = val;
+      return true;
+    }
+    return false;
+  }
+
   // Bluetooth Remote address to Pair With
   void getBtPairedAddress(char* dest) {strcpy(dest, btpairedaddress);}
   void setBtPairedAddress(const char *val) {
@@ -1065,6 +1153,10 @@ public:
     json["ppmframe"] = ppmframe;
     json["ppmsync"] = ppmsync;
     json["ppmchcnt"] = ppmchcnt;
+    json["madbeta"] = madbeta;
+    json["lppan"] = lppan;
+    json["lptilt"] = lptilt;
+    json["lproll"] = lproll;
     json["btpairedaddress"] = btpairedaddress;
   }
 
@@ -1153,6 +1245,15 @@ public:
     v = json["ppmframe"]; if(!v.isNull()) {setPpmFrame(v);}
     v = json["ppmsync"]; if(!v.isNull()) {setPpmSync(v);}
     v = json["ppmchcnt"]; if(!v.isNull()) {setPpmChCnt(v);}
+    v = json["madbeta"]; if(!v.isNull()) {setMadBeta(v);}
+    v = json["lppan"]; if(!v.isNull()) {setLpPan(v);}
+    v = json["lptilt"]; if(!v.isNull()) {setLpTilt(v);}
+    v = json["lproll"]; if(!v.isNull()) {setLpRoll(v);}
+    v = json["adpbetamin"]; if(!v.isNull()) {setAdpBetaMin(v);}
+    v = json["adpbetamax"]; if(!v.isNull()) {setAdpBetaMax(v);}
+    v = json["stillthresh"]; if(!v.isNull()) {setStillThresh(v);}
+    v = json["yawlocktime"]; if(!v.isNull()) {setYawLockTime(v);}
+    v = json["maganomratio"]; if(!v.isNull()) {setMagAnomRatio(v);}
     v = json["btpairedaddress"]; if(!v.isNull()) {setBtPairedAddress(v);}
     if(chresetfusion)
       resetFusion();
@@ -1565,6 +1666,17 @@ protected:
   uint16_t ppmframe = 22500; // PPM Frame Length (us)
   uint16_t ppmsync = 350; // PPM Sync Pulse Length (us)
   uint8_t ppmchcnt = 8; // PPM channels to output
+  float madbeta = 0.04; // Madgwick Beta Gain
+  float lppan = 0.3; // Pan Output Low Pass Alpha
+  float lptilt = 0.3; // Tilt Output Low Pass Alpha
+  float lproll = 0.3; // Roll Output Low Pass Alpha
+
+  // Yaw Drift Suppression
+  float adpbetamin = 0.02;     // Adaptive beta minimum (still)
+  float adpbetamax = 0.12;     // Adaptive beta maximum (moving)
+  float stillthresh = 0.08f;   // Gyro stillness threshold (rad/s)
+  uint16_t yawlocktime = 50;   // Samples before yaw lock
+  float maganomratio = 0.35f;  // Magnetic anomaly detection ratio
 
   // Setting Arrays
   char btpairedaddress[19]; // Bluetooth Remote address to Pair With

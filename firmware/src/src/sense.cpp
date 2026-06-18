@@ -99,11 +99,23 @@ Madgwick madgwick;
 int64_t usduration = 0; //TODO unsinged
 int64_t senseUsDuration = 0;
 
+// Yaw drift suppression state
+static float still_yaw = 0.0f;          // yaw snapshot when stillness locked
+static bool yaw_locked = false;         // true when yaw is frozen
+static uint32_t still_count = 0;        // consecutive still samples
+static float mag_field_avg = 0.0f;      // running geomagnetic field magnitude
+static bool mag_field_init = false;     // mag field average initialized
+static float adaptive_beta = 0.04f;     // current dynamic beta value
+
 const struct device *i2c_dev = nullptr;
 
 static bool hasAcc = false;
 static bool hasGyr = false;
 static bool hasMag = false;
+
+#if defined(HAS_QMC5883)
+static uint32_t qmc5883FailCount = 0;
+#endif
 
 #if defined(HAS_APDS9960)
 static bool blesenseboard = false;
@@ -131,8 +143,6 @@ MPU6886 mpu6886;
 #endif
 
 #define SENSOR_VALUE_TO_FLOAT(x) ((float)x.val1 + (float)x.val2 / 1000000.0f)
-
-#define OUTFILT_ALPHA 0.3f
 
 // Initial Orientation Data+Vars
 #define MADGINIT_ACCEL 0x01
@@ -330,10 +340,12 @@ int sense_Init()
 #if defined(HAS_QMC5883)
   if(qmc5883Init()) {
     hasMag = true;
-    LOG_INF("QMC5883 Magnetometer Initialized");
+    uint8_t chipId = qmc5883GetChipId();
+    LOG_INF("QMC5883 Magnetometer Initialized, chipID=0x%02x addr=0x10", chipId);
+  } else {
+    uint8_t chipId = qmc5883GetChipId();
+    LOG_ERR("QMC5883 Magnetometer Not Found, chipID=0x%02x addr=0x10", chipId);
   }
-  else
-    LOG_ERR("QMC5883 Magnetometer Not Found");
 #endif
 
   // No Gyro, no need to calibrate
@@ -434,9 +446,12 @@ void calculate_Thread()
       static float tiltout_prev = 0.0f;
       static float rollout_prev = 0.0f;
       static float panout_prev = 0.0f;
-      tiltout = OUTFILT_ALPHA * tiltout + (1.0f - OUTFILT_ALPHA) * tiltout_prev;
-      rollout = OUTFILT_ALPHA * rollout + (1.0f - OUTFILT_ALPHA) * rollout_prev;
-      panout = OUTFILT_ALPHA * panout + (1.0f - OUTFILT_ALPHA) * panout_prev;
+      float lpTilt = trkset.getLpTilt();
+      float lpRoll = trkset.getLpRoll();
+      float lpPan = trkset.getLpPan();
+      tiltout = lpTilt * tiltout + (1.0f - lpTilt) * tiltout_prev;
+      rollout = lpRoll * rollout + (1.0f - lpRoll) * rollout_prev;
+      panout = lpPan * panout + (1.0f - lpPan) * panout_prev;
       tiltout_prev = tiltout;
       rollout_prev = rollout;
       panout_prev = panout;
@@ -824,6 +839,15 @@ void calculate_Thread()
       k_mutex_unlock(&data_mutex);
     }
 
+    // Periodic pose & channel output diagnostic log (~every 500ms at ~100Hz)
+    static uint16_t poseDiagCount = 0;
+    if (++poseDiagCount >= 50) {
+      poseDiagCount = 0;
+      LOG_INF("POSE: roll=%d tilt=%d pan=%d | ch_pan=%d ch_tilt=%d ch_roll=%d",
+              (int32_t)(roll * 10), (int32_t)(tilt * 10), (int32_t)(pan * 10),
+              panout_ui, tiltout_ui, rollout_ui);
+    }
+
     // Adjust sleep for a more accurate period
     usduration = micros64() - usduration;
     if (CALCULATE_PERIOD - usduration <
@@ -1005,6 +1029,8 @@ void sensor_Thread()
     if(hasMag) {
       if (qmc5883Read(tmag)) {
         magValid = true;
+      } else {
+        qmc5883FailCount++;
       }
     }
 #endif
@@ -1176,11 +1202,83 @@ void sensor_Thread()
       // Period Between Samples
       float delttime = madgwick.deltatUpdate();
 
-      madgwick.update(gyrx * DEG_TO_RAD, gyry * DEG_TO_RAD, gyrz * DEG_TO_RAD, accx, accy, accz,
-                      magx, magy, magz, delttime);
-      roll = madgwick.getPitch();
-      tilt = madgwick.getRoll();
-      pan = madgwick.getYaw();
+      // --- Gyro magnitude ---
+      float gyro_mag = sqrtf(gyrx * gyrx + gyry * gyry + gyrz * gyrz);
+
+      // --- Adaptive Beta (dynamic gain) ---
+      // Low motion → low beta (trust mag, correct drift)
+      // High motion → high beta (trust gyro, responsive)
+      float beta_min = trkset.getAdpBetaMin();
+      float beta_max = trkset.getAdpBetaMax();
+      if (gyro_mag < ADAPTIVE_GYRO_LOW) {
+        adaptive_beta = beta_min;
+      } else if (gyro_mag > ADAPTIVE_GYRO_HIGH) {
+        adaptive_beta = beta_max;
+      } else {
+        // Linear interpolation between min and max
+        float t = (gyro_mag - ADAPTIVE_GYRO_LOW) / (ADAPTIVE_GYRO_HIGH - ADAPTIVE_GYRO_LOW);
+        adaptive_beta = beta_min + t * (beta_max - beta_min);
+      }
+
+      // --- Magnetic anomaly detection ---
+      // Monitor geomagnetic field magnitude; sudden changes = interference
+      bool mag_anomaly = false;
+      float mag_field = sqrtf(magx * magx + magy * magy + magz * magz);
+      if (magValid) {
+        if (!mag_field_init) {
+          mag_field_avg = mag_field;
+          mag_field_init = true;
+        } else {
+          // Exponential moving average of field strength
+          mag_field_avg += 0.01f * (mag_field - mag_field_avg);
+          // Detect anomaly: field deviates from running average
+          if (mag_field_avg > 0.01f) {
+            float deviation = fabsf(mag_field - mag_field_avg) / mag_field_avg;
+            mag_anomaly = (deviation > trkset.getMagAnomRatio());
+          }
+        }
+      }
+
+      // On magnetic anomaly, trust gyro more (raise beta floor)
+      float beta_final = mag_anomaly ? fmaxf(adaptive_beta, beta_max * 0.7f) : adaptive_beta;
+      madgwick.setBeta(beta_final);
+
+      // --- Stillness detection ---
+      float still_thresh = trkset.getStillThresh();
+      if (gyro_mag < still_thresh && !mag_anomaly) {
+        still_count++;
+      } else {
+        still_count = 0;
+        if (yaw_locked) {
+          // Unlock yaw — drift has already been halted, resume normal tracking
+          yaw_locked = false;
+        }
+      }
+
+      // --- Madgwick update ---
+      if (yaw_locked) {
+        // Yaw is locked: run update but don't integrate yaw
+        // Temporarily zero yaw gyro so only accel/mag affect orientation
+        madgwick.update(0.0f, gyry * DEG_TO_RAD, gyrz * DEG_TO_RAD, accx, accy, accz,
+                        magx, magy, magz, delttime);
+        // Restore locked yaw (ignore Madgwick's yaw estimate)
+        pan = still_yaw;
+        roll = madgwick.getPitch();
+        tilt = madgwick.getRoll();
+      } else {
+        // Normal update with full gyro
+        madgwick.update(gyrx * DEG_TO_RAD, gyry * DEG_TO_RAD, gyrz * DEG_TO_RAD, accx, accy, accz,
+                        magx, magy, magz, delttime);
+        roll = madgwick.getPitch();
+        tilt = madgwick.getRoll();
+        pan = madgwick.getYaw();
+
+        // Lock yaw when still for long enough
+        if (still_count > trkset.getYawLockTime()) {
+          yaw_locked = true;
+          still_yaw = pan;
+        }
+      }
 
       if (firstrun && pan != 0) {
         panoffset = pan;
@@ -1189,6 +1287,25 @@ void sensor_Thread()
     }
 
     k_mutex_unlock(&sensor_mutex);
+
+    // Periodic sensor diagnostic log (~every 500ms at ~100Hz)
+    static uint16_t sensDiagCount = 0;
+    if (++sensDiagCount >= 50) {
+      sensDiagCount = 0;
+#if defined(HAS_QMC5883)
+      LOG_INF("SENS: ACC[%d,%d,%d] GYR[%d,%d,%d] MAG[%d,%d,%d] valid=%d fail=%u",
+              (int32_t)(raccx * 1000), (int32_t)(raccy * 1000), (int32_t)(raccz * 1000),
+              (int32_t)(rgyrx * 100), (int32_t)(rgyry * 100), (int32_t)(rgyrz * 100),
+              (int32_t)(rmagx * 100), (int32_t)(rmagy * 100), (int32_t)(rmagz * 100),
+              magValid ? 1 : 0, qmc5883FailCount);
+#else
+      LOG_INF("SENS: ACC[%d,%d,%d] GYR[%d,%d,%d] MAG[%d,%d,%d] valid=%d",
+              (int32_t)(raccx * 1000), (int32_t)(raccy * 1000), (int32_t)(raccz * 1000),
+              (int32_t)(rgyrx * 100), (int32_t)(rgyry * 100), (int32_t)(rgyrz * 100),
+              (int32_t)(rmagx * 100), (int32_t)(rmagy * 100), (int32_t)(rmagz * 100),
+              magValid ? 1 : 0);
+#endif
+    }
 
     // Adjust sleep for a more accurate period
     senseUsDuration = micros64() - senseUsDuration;

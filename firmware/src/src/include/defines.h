@@ -168,6 +168,17 @@
 #define GYRO_SAMPLE_WEIGHT 0.05f
 #define GYRO_FLASH_IF_OFFSET 0.5f // Save to flash if gyro is off more than 0.5 degrees/sec from flash value
 
+// Yaw drift suppression (tunable via GUI, these are internal fallback defaults)
+#define GYRO_STILL_THRESHOLD 0.08f   // rad/s (~4.6 deg/s), fallback
+#define YAW_LOCK_STILL_TIME 50        // samples, fallback
+#define MAG_ANOMALY_RATIO 0.35f       // ratio, fallback
+#define ADAPTIVE_BETA_MIN 0.02f       // fallback
+#define ADAPTIVE_BETA_MAX 0.12f       // fallback
+
+// Adaptive beta transition points (internal, not user-configurable)
+#define ADAPTIVE_GYRO_LOW 0.3f        // rad/s, transition start
+#define ADAPTIVE_GYRO_HIGH 2.5f       // rad/s, fully trusting gyro
+
 // Time macros
 #include "zephyr/kernel.h"
 #define millis() k_cyc_to_ms_floor32(k_cycle_get_32())
