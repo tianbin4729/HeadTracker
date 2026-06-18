@@ -57,6 +57,7 @@ class Madgwick
   void begin(float pitch, float roll, float yaw);
   void begin(float ax, float ay, float az, float mx, float my, float mz);
   void setGain(float gain) { beta = gain; }
+  void setBeta(float b) { beta = b; }
   void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my,
               float mz, float deltat);
   void updateIMU(float gx, float gy, float gz, float ax, float ay, float az, float deltat);

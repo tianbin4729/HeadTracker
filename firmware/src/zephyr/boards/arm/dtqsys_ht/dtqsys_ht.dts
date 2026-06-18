@@ -23,6 +23,7 @@
 	aliases {
 		adcctrl = &adc;
     i2csensor = &i2c1;
+    i2cexternal = &i2c1;
 		guiuart = &cdc_acm_uart0;
 	};
 };

@@ -9,6 +9,7 @@
   aliases {
     adcctrl = &adc0;
     i2csensor = &i2c0;
+    i2cexternal = &i2c0;
     guiuart = &uart0;
 		auxserial = &uart1;
   };

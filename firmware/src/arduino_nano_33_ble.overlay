@@ -20,6 +20,7 @@
   aliases {
     adcctrl = &adc;
     i2csensor = &i2c1;
+    i2cexternal = &i2c0;
 		guiuart = &cdc_acm_uart0;
   };
 };
@@ -73,7 +74,8 @@
 };
 
 &i2c0 {
-	status = "disabled";
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
 };
 
 &i2c1 {

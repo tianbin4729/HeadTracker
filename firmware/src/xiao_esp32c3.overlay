@@ -18,6 +18,7 @@
   aliases {
     adcctrl = &adc0;
     i2csensor = &i2c0;
+    i2cexternal = &i2c0;
     spisensor = &spi2;
     guiuart = &usb_serial;
   };
