@@ -60,9 +60,13 @@ if %ERRORLEVEL% NEQ 0 (
 echo   [OK] qmake completed.
 
 echo.
+REM 设置 PATH（MinGW + Qt + Python）
+set "PATH=%MINGW_PATH%\bin;%MINGW_PATH%\libexec\gcc\x86_64-w64-mingw32\13.1.0;%QT_PATH%\bin;%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%"
+
 echo   [3/4] Compiling...
-REM 使用完整路径确保便携性 (覆盖 Makefile 中的 CC/CXX)
-mingw32-make -j%NUMBER_OF_PROCESSORS% CC="%MINGW_PATH%\bin\gcc.exe" CXX="%MINGW_PATH%\bin\g++.exe" 2>&1
+REM 补丁 Makefile 使用完整 g++ 路径（便携版 linker plugin 需要）
+powershell -Command "(Get-Content Makefile.Release) -replace '^LINKER\s*=.*g\+\+', 'LINKER      = %MINGW_PATH:\=/%/bin/g++' -replace '^CXX\s*=.*g\+\+', 'CXX          = %MINGW_PATH:\=/%/bin/g++' | Set-Content Makefile.Release"
+mingw32-make -j%NUMBER_OF_PROCESSORS% 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo   [ERROR] Compilation failed!
     goto :error
