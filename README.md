@@ -1,3 +1,4 @@
+我是非常点背的遇到了开发板MAG传感器坏掉的情况，所以对项目进行了修改，外置了qmc5883p。并且为了抑制漂移增加了一些参数设置。代码由AI进行编写。
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=NMU3B9Z82JB3A)
 [![Join the Discord chat](https://img.shields.io/discord/827622724565467196?style=flat-square)](https://discord.gg/ux5hEaNSPQ)
 
